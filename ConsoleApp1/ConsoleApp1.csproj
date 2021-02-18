@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MyJetWallet.MatchingEngine.EventReader" Version="1.1.0" />
-    <PackageReference Include="MyJetWallet.MatchingEngine.Grpc" Version="1.0.0" />
+    <PackageReference Include="MyJetWallet.MatchingEngine.EventReader" Version="1.2.0" />
+    <PackageReference Include="MyJetWallet.MatchingEngine.Grpc" Version="1.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
   </ItemGroup>
 

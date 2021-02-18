@@ -18,36 +18,24 @@ namespace ConsoleApp1
             var settings1 = new MatchingEngineEventReaderSettings("amqp://rabbit:Dhgr49TdY6befc4l@192.168.10.80:5672", "my-queue-name-1")
             {
                 TopicName = "spot.me.events",
-                IsQueueAutoDelete = true
+                IsQueueAutoDelete = true,
+                MessageTypes = new List<Header.Types.MessageType>()
+                {
+                    Header.Types.MessageType.CashIn,
+                    Header.Types.MessageType.CashOut,
+                    Header.Types.MessageType.CashTransfer,
+                    Header.Types.MessageType.Order
+                }
             };
 
-            var settings2 = new MatchingEngineEventReaderSettings("amqp://rabbit:Dhgr49TdY6befc4l@192.168.10.80:5672", "my-queue-name-2")
-            {
-                TopicName = "spot.me.events",
-                IsQueueAutoDelete = true
-            };
 
-            var settings3 = new MatchingEngineEventReaderSettings("amqp://rabbit:Dhgr49TdY6befc4l@192.168.10.80:5672", "my-queue-name-4")
-            {
-                TopicName = "spot.me.events",
-                IsQueueAutoDelete = true
-            };
-
-            var handler = new CashInEventHandler();
+            var handler = new EventHandler();
 
             using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
 
             Console.WriteLine("MatchingEngineCashInEventReader");
-            var reader1 = new MatchingEngineCashInEventReader(settings1, new[] { handler }, loggerFactory.CreateLogger<MatchingEngineCashInEventReader>());
+            var reader1 = new MatchingEngineGlobalEventReader(settings1, new[] { handler }, loggerFactory.CreateLogger<MatchingEngineGlobalEventReader>());
             reader1.Start();
-
-            Console.WriteLine("MatchingEngineCashOutEventReader");
-            var reader2 = new MatchingEngineCashOutEventReader(settings2, new[] { new CashOutEventEventHandler() }, loggerFactory.CreateLogger<MatchingEngineCashOutEventReader>());
-            reader2.Start();
-
-            Console.WriteLine("MatchingEngineExecutionEventReader");
-            var reader3 = new MatchingEngineExecutionEventReader(settings3, new[] { new ExecutionEventHandler() }, loggerFactory.CreateLogger<MatchingEngineExecutionEventReader>());
-            reader3.Start();
 
 
             Console.WriteLine("Pres enter to api call...");
@@ -59,8 +47,6 @@ namespace ConsoleApp1
             Console.ReadLine();
 
             reader1.Stop();
-            reader2.Stop();
-            reader3.Stop();
         }
 
         private static void ApiCall()
@@ -131,13 +117,36 @@ namespace ConsoleApp1
         }
     }
 
-    public class CashInEventHandler : IMatchingEngineSubscriber<CashInEvent>
+    public class EventHandler : IMatchingEngineSubscriber<object>
     {
-        public Task Process(IList<CustomQueueItem<CashInEvent>> batch)
+        public Task Process(IList<CustomQueueItem<object>> batch)
         {
-            Console.WriteLine("CashInEvent:");
-            Console.WriteLine(JsonConvert.SerializeObject(batch, Formatting.Indented));
+            foreach (var item in batch)
+            {
+                if (item.Value is CashInEvent cashIn)
+                {
+                    Console.WriteLine("CashInEvent:");
+                    Console.WriteLine(JsonConvert.SerializeObject(cashIn, Formatting.Indented));
+                }
 
+                if (item.Value is CashOutEvent cashOut)
+                {
+                    Console.WriteLine("CashOutEvent:");
+                    Console.WriteLine(JsonConvert.SerializeObject(cashOut, Formatting.Indented));
+                }
+
+                if (item.Value is CashTransferEvent cashTransfer)
+                {
+                    Console.WriteLine("CashTransferEvent:");
+                    Console.WriteLine(JsonConvert.SerializeObject(cashTransfer, Formatting.Indented));
+                }
+
+                if (item.Value is ExecutionEvent execution)
+                {
+                    Console.WriteLine("ExecutionEvent:");
+                    Console.WriteLine(JsonConvert.SerializeObject(execution, Formatting.Indented));
+                }
+            }
             return Task.CompletedTask;
         }
     }
