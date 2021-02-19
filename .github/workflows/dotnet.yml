@@ -22,4 +22,6 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: print
-      run: echo ${GITHUB_REF#refs/tags/Server-}
+      run:  |
+        var=${GITHUB_REF#refs/tags/Server-}
+        echo $ver
